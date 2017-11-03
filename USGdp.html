@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>United States : GDP Bar chart</title>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+</head>
+
+<body>
+	<div class="dropdown"></div>
+
+	<h1> GDP Data United States </h1>
+	<div class="chart">
+		<svg height="700" width="800"></svg>
+	</div>
+
+</body>
+
+<script type="text/javascript">
+	const api = 'https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/GDP-data.json';
+
+   fetch(api).then(data=>data.json()).then(result => plot(result.data));
+
+	function plot(gdpdata) {
+		const svg = d3.select("svg")
+
+		const margin = {top:10, right: 30, bottom : 30, left: 30};
+		const width = svg.attr("width") - margin.left - margin.right;
+		const height = svg.attr("height") - margin.top - margin.bottom;
+
+		const mindate = new Date(gdpdata[0][0]);
+		const maxdate = new Date(gdpdata[274][0]);
+		const maxGDP = d3.max(gdpdata, data=> data[1]);
+		
+		const xscale = d3.scaleTime()
+		.domain([mindate, maxdate])
+		.range([0,width]);
+
+		const yscale = d3.scaleLinear()
+		.domain([0,maxGDP]).range([height,0]);
+
+		const xAxis = d3.axisBottom(xscale).ticks(d3.timeYear.every(5));
+		const yAxis = d3.axisLeft(yscale).ticks(10);
+
+		svg.append("g").call(xAxis)
+		.attr("transform", "translate(50," + (height+20)+ ")");
+
+		svg.append("g").call(yAxis)
+		.attr("transform", "translate(50,20)");
+
+		const barwidth = Math.ceil(width / gdpdata.length);
+		console.log(barwidth);
+
+		const bars = svg.selectAll(".bar")
+		.data(gdpdata)
+		.enter()
+		.append("rect").attr("class","bar")
+		.attr("x", data => (xscale( new Date(data[0]) ) + 50))
+		.attr("y", data => (yscale( new Date(data[1]) ) + 20))
+		.attr("height", data => height - yscale(data[1]))
+		.attr("width", barwidth)
+		.style("fill", "orange");
+
+		const background = d3.select(".dropdown");
+		console.log(background);
+
+		const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+		bars.on("mouseover", function(data) {
+			var currentDateTime = new Date(data[0]);
+	        var year = currentDateTime.getFullYear();
+	        var month = currentDateTime.getMonth();
+	        var dollars = data[1];
+	        var shiftx = this.x.baseVal.value;
+	        var shifty =  this.y.baseVal.value;
+	        console.log(shiftx, shifty);
+
+	        const text = months[month] + ", " + year + " | " + "$"+dollars+"B";
+
+	        background.text(text);
+	        background.style("opacity", 1);
+	        background.style("transform", "translate("+shiftx+"px,"+shifty+"px)");
+
+		});
+
+		bars.on("mouseleave", function() {
+			background.style("opacity", 0);
+		});
+
+
+
+	}
+
+</script>
+
+<style type="text/css">
+	
+	body {
+		max-width: 90%;
+		margin: auto;
+	}
+	
+	.dropdown {
+    
+    position: absolute;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 50px 100px rgba(50,50,93,.1), 0 15px 35px rgba(50,50,93,.15), 0 5px 15px rgba(0,0,0,.1);
+    transition:all 0.3s, opacity 0.1s, transform 0.2s;
+    transform-origin: 50% 0;
+    display: flex;
+    justify-content: center;
+    opacity:0;
+    padding: 4px;
+  }
+
+  .active {
+  	opacity: 1;
+
+  }
+
+</style>
+
+</html>
